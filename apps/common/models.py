@@ -39,7 +39,9 @@ class IsDeletedModel(BaseModel):
     objects = IsDeletedManager()
 
     def delete(self, *args, **kwargs):
-        '''Soft delete by setting is_deleted=True'''
+        '''
+        Soft delete by setting is_deleted=True
+        '''
 
         self.is_deleted = True
         self.deleted_at = timezone.now()

@@ -63,7 +63,7 @@ class User(AbstractBaseUser, IsDeletedModel):
         """
         Returns the string representation of the user, which is their full name.
 
-        Returns:ч
+        Returns:
             str: The full name of the user.
         """
         return self.full_name

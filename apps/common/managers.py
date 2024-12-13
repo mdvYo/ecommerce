@@ -30,7 +30,7 @@ class IsDeletedQuerySet(GetOrNoneQuerySet):
             return self.update(is_deleted=True, deleted_at=timezone.now())
 
 
-class IsDeletedManager(models.Manager):
+class IsDeletedManager(GetOrNoneManager):
     def get_queryset(self):
         return IsDeletedQuerySet(self.model).filter(is_deleted=False)
 
