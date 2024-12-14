@@ -1,5 +1,7 @@
 import secrets
 
+from apps.comments.models import Review
+from apps.common.managers import IsDeletedQuerySet
 from apps.common.models import BaseModel
 
 
@@ -27,3 +29,11 @@ def set_dict_attr(obj, data):
     for attr, value in data.items():
         setattr(obj, attr, value)   # Или obj.attr = value для каждого атрибута
     return obj
+
+
+def get_average_rating(data: dict, product: IsDeletedQuerySet):
+    ''' Adding information about average rating of the product to serializer.data '''
+
+    reviews = Review.objects.filter(product=product)
+
+    data['average_rating'] = sum(review.rating for review in reviews) / reviews.count()

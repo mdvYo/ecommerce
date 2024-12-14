@@ -1,12 +1,20 @@
-from drf_spectacular.utils import extend_schema
+# from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema     # OpenApiParameter
+# from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.common.paginations import CustomPagination
+from apps.common.utils import get_average_rating
 from apps.profiles.models import OrderItem, Order, ShippingAddress
 from apps.sellers.models import Seller
+from apps.shop.filters import ProductFilter
 from apps.shop.models import Category, Product
 from apps.shop.serializers import CategorySerializer, ProductSerializer, OrderItemSerializer, ToggleCartItemSerializer, \
     OrderSerializer, CheckoutSerializer
+
+from apps.shop.schema_examples import PRODUCT_PARAM_EXAMPLE
+
 
 tags = ["Shop"]
 
@@ -66,20 +74,28 @@ class ProductsByCategoryView(APIView):
 
 class ProductsView(APIView):
     serializer_class = ProductSerializer
+    pagination_class = CustomPagination
 
     @extend_schema(
         operation_id="all_products",
         summary="Product Fetch",
         description="""
-                This endpoint returns all products.
-            """,
-        tags=tags
+               This endpoint returns all products.
+           """,
+        tags=tags,
+        parameters=PRODUCT_PARAM_EXAMPLE,
     )
     def get(self, request, *args, **kwargs):
         products = Product.objects.select_related("category", "seller", "seller__user").all()
-        serializer = self.serializer_class(products, many=True)
-
-        return Response(data=serializer.data, status=200)
+        filterset = ProductFilter(request.GET, queryset=products)
+        if filterset.is_valid():
+            queryset = filterset.qs
+            paginator = self.pagination_class()
+            paginated_queryset = paginator.paginate_queryset(queryset, request)
+            serializer = self.serializer_class(paginated_queryset, many=True)
+            return paginator.get_paginated_response(serializer.data)    # return Response(serializer.data)
+        else:
+            return Response(filterset.errors, status=400)
 
 
 class ProductsBySellerView(APIView):
@@ -105,7 +121,7 @@ class ProductView(APIView):
     serializer_class = ProductSerializer
 
     def get_object(self, slug):
-        product = Product.objects.get_objects(slug=slug)
+        product = Product.objects.get_or_none(slug=slug)
         return product
 
     @extend_schema(
@@ -121,7 +137,9 @@ class ProductView(APIView):
         if not product:
             return Response(data={'message': 'Product does not exist!'}, status=404)
         serializer = self.serializer_class(product)
-        return Response(data=serializer.data, status=200)
+        data = serializer.data
+        get_average_rating(data, product)
+        return Response(data=data, status=200)
 
 
 class CartView(APIView):

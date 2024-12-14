@@ -7,7 +7,7 @@ from apps.profiles.models import Order, OrderItem
 from apps.sellers.models import Seller
 from apps.sellers.serializers import SellerSerializer
 from apps.shop.models import Category, Product
-from apps.shop.serializers import CreateProductSerializer, ProductSerializer, OrderSerializer
+from apps.shop.serializers import CreateProductSerializer, ProductSerializer, OrderSerializer, CheckItemOrderSerializer
 
 # Create your views here.
 
@@ -107,7 +107,7 @@ class SellerProductView(APIView):
             return Response(data={'message': 'This product does not exist!'}, status=404)
 
         if request.user.id != product.seller.user.id:
-            return Response(data={'message': 'Its not your product!!'}, status=403)
+            return Response(data={'message': 'It`s not your product!!'}, status=403)
 
         if serializer.is_valid():
             data = serializer.validated_data
@@ -167,7 +167,6 @@ class SellerOrdersView(APIView):
         return Response(data=serializer.data, status=200)
 
 
-
 class SellerOrderItemView(APIView):
     serializer_class = CheckItemOrderSerializer
 
@@ -188,3 +187,5 @@ class SellerOrderItemView(APIView):
         order_items = OrderItem.objects.filter(order=order, product__seller=seller)
         serializer = self.serializer_class(order_items, many=True)
         return Response(data=serializer.data, status=200)
+
+

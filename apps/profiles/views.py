@@ -5,7 +5,9 @@ from rest_framework.views import APIView
 from apps.common.utils import set_dict_attr
 from apps.profiles.models import ShippingAddress, Order, OrderItem
 from apps.profiles.serializers import ProfileSerializer, ShippingAddressSerializer
-from apps.shop.serializers import OrderSerializer
+from apps.shop.serializers import OrderSerializer, CheckItemOrderSerializer
+
+from apps.common.permissions import IsOwner
 
 # Create your views here.
 
@@ -13,6 +15,7 @@ tags = ["Profiles"]
 
 
 class ProfileView(APIView):
+    permission_classes = [IsOwner]
     serializer_class = ProfileSerializer
 
     @extend_schema(
@@ -59,6 +62,7 @@ class ProfileView(APIView):
 
 
 class ShippingAddressesView(APIView):
+    permission_classes = [IsOwner]
     serializer_class = ShippingAddressSerializer
 
     @extend_schema(
@@ -93,6 +97,7 @@ class ShippingAddressesView(APIView):
 
 
 class ShippingAddressViewID(APIView):
+    permission_classes = [IsOwner]
     serializer_class = ShippingAddressSerializer
 
     def get_object(self, user, shipping_id):
@@ -151,6 +156,7 @@ class ShippingAddressViewID(APIView):
 
 
 class OrdersView(APIView):
+    permission_classes = [IsOwner]
     serializer_class = OrderSerializer
 
     @extend_schema(
@@ -171,6 +177,7 @@ class OrdersView(APIView):
 
 
 class OrderItemView(APIView):
+    permission_classes = [IsOwner]
     serializer_class = CheckItemOrderSerializer
 
     @extend_schema(
