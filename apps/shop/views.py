@@ -4,8 +4,10 @@ from drf_spectacular.utils import extend_schema     # OpenApiParameter
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.comments.models import Review
+from apps.common.managers import IsDeletedQuerySet
 from apps.common.paginations import CustomPagination
-from apps.common.utils import get_average_rating
+
 from apps.profiles.models import OrderItem, Order, ShippingAddress
 from apps.sellers.models import Seller
 from apps.shop.filters import ProductFilter
@@ -124,6 +126,13 @@ class ProductView(APIView):
         product = Product.objects.get_or_none(slug=slug)
         return product
 
+    def get_average_rating(self, data: dict, product: IsDeletedQuerySet):
+        ''' Adding information about average rating of the product to serializer.data '''
+
+        reviews = Review.objects.filter(product=product)
+
+        data['average_rating'] = sum(review.rating for review in reviews) / reviews.count()
+
     @extend_schema(
         operation_id="product_detail",
         summary="Product Details Fetch",
@@ -138,7 +147,7 @@ class ProductView(APIView):
             return Response(data={'message': 'Product does not exist!'}, status=404)
         serializer = self.serializer_class(product)
         data = serializer.data
-        get_average_rating(data, product)
+        self.get_average_rating(data, product)
         return Response(data=data, status=200)
 
 
